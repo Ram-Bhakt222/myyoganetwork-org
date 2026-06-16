@@ -416,6 +416,19 @@
   </div>
 </section>
 
+<!-- ============ LATEST FROM THE COMMUNITY (live Discourse feed) ============ -->
+<section id="community" style="background:#fff" aria-labelledby="comm">
+  <div class="wrap">
+    <p class="eyebrow">From the community</p>
+    <h2 id="comm">Latest conversations</h2>
+    <p style="max-width:46em">Real discussions happening right now in the My Yoga Network community — pulled live from our forum.</p>
+    <div id="discourse-latest" class="cards" style="margin-top:26px">
+      <div style="color:var(--ink-soft)">Loading the latest topics…</div>
+    </div>
+    <p style="margin-top:26px"><a class="btn" href="https://community.myyoganetwork.org" target="_blank" rel="noopener">Open the community →</a></p>
+  </div>
+</section>
+
 <!-- ============ FEATURED STORY: SATYAVATHI ============ -->
 <section id="story" class="story" aria-labelledby="sto">
   <div class="wrap split">
@@ -491,6 +504,16 @@
     <details><summary>Is it free to join?</summary><p>Yes. Joining the community as a teacher is free. You can use the chatbot, ask questions, and add yourself to the teacher database so we can match you with work. Paid programs and agency services are optional.</p></details>
     <details><summary>Will AI replace yoga teachers?</summary><p>No. Yoga is a human connection — healing comes through people, not wires. But teachers who use AI to find clients and run their business will move faster than those who don't. This network exists to put those tools in your hands, not to replace you.</p></details>
     <details><summary>What kind of work does the network help me get?</summary><p>We connect teachers and therapists with demand we're already building: hotels, schools, corporate and workplace wellness, and clinical/healthcare partners — and we share the marketing, outreach and AI tools so you can build your own pipeline too.</p></details>
+  </div>
+</section>
+
+<!-- ============ DISCOURSE COMMENTS ============ -->
+<section id="comments" style="background:#fff" aria-labelledby="cmts">
+  <div class="wrap" style="max-width:820px">
+    <p class="eyebrow">Join the conversation</p>
+    <h2 id="cmts">Comments &amp; discussion</h2>
+    <p style="margin-bottom:18px">Powered by the My Yoga Network community. Sign in with your free community account to comment.</p>
+    <div id="discourse-comments"></div>
   </div>
 </section>
 
@@ -582,6 +605,48 @@
     closeJoin();
     return false;
   }
+
+  // Live "Latest from the community" feed from Discourse
+  (function loadCommunity(){
+    var base = "https://community.myyoganetwork.org";
+    var box = document.getElementById('discourse-latest');
+    if(!box) return;
+    function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+    fetch(base + "/latest.json", {headers:{'Accept':'application/json'}})
+      .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+      .then(function(data){
+        var topics = (data && data.topic_list && data.topic_list.topics) || [];
+        topics = topics.filter(function(t){return !t.pinned_globally;}).slice(0,6);
+        if(!topics.length){ throw new Error('no topics'); }
+        box.innerHTML = topics.map(function(t){
+          var url = base + "/t/" + t.slug + "/" + t.id;
+          var replies = Math.max(0,(t.posts_count||1)-1);
+          return '<a class="card" style="display:block;text-decoration:none" href="'+url+'" target="_blank" rel="noopener">'
+            + '<div class="ic" aria-hidden="true">💬</div>'
+            + '<h3 style="margin-bottom:.4em">'+esc(t.title)+'</h3>'
+            + '<p style="margin:0;color:var(--sage);font-weight:600">'+replies+' '+(replies===1?'reply':'replies')+' · '+(t.views||0)+' views</p>'
+            + '</a>';
+        }).join('');
+      })
+      .catch(function(){
+        box.innerHTML = '<div style="color:var(--ink-soft)">Visit the forum to see the latest discussions. '
+          + '<a href="'+base+'" target="_blank" rel="noopener">Open the community →</a><br>'
+          + '<small>(If this stays empty, enable CORS for www.myyoganetwork.org in Discourse — see DISCOURSE-EMBED-GUIDE.md.)</small></div>';
+      });
+  })();
+</script>
+
+<!-- ============ DISCOURSE EMBED (comments) ============ -->
+<script type="text/javascript">
+  window.DiscourseEmbed = {
+    discourseUrl: 'https://community.myyoganetwork.org/',
+    discourseEmbedUrl: 'https://www.myyoganetwork.org/'
+  };
+  (function() {
+    var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+    d.src = window.DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+  })();
 </script>
 </body>
 </html>
